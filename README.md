@@ -50,6 +50,7 @@ Make sure you have the required dependencies installed.
 Clone the project using:
 ```bash
 git clone https://github.com/ETCKK/Cake-Agent.git
+cd Cake-Agent
 ```
 
 Build with the following command:
