@@ -14,6 +14,7 @@ add_executable(cake-agent
     src/MediaTools.cpp 
     src/SystemTools.cpp 
     src/OllamaClient.cpp
+    src/OpenAIClient.cpp
 )
 
 target_link_libraries(cake-agent PRIVATE CURL::libcurl nlohmann_json::nlohmann_json)

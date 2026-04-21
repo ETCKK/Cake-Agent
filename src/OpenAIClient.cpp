@@ -1,7 +1,8 @@
-#include "OllamaClient.hpp"
+#include "OpenAIClient.hpp"
 #include <curl/curl.h>
+#include <cstdlib>
 
-namespace OllamaClient
+namespace OpenAIClient
 {
     size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
     {
@@ -13,6 +14,7 @@ namespace OllamaClient
     {
         CURL *curl = curl_easy_init();
         std::string response;
+        struct curl_slist *headers = nullptr;
 
         if (!curl)
         {
@@ -20,9 +22,18 @@ namespace OllamaClient
             return false;
         }
 
+        const char *api_key = std::getenv("OPENAI_API_KEY");
+        if (!api_key || std::string(api_key).empty())
+        {
+            err = "OPENAI_API_KEY is not set";
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
         json payload;
         payload["model"] = model;
         payload["stream"] = false;
+        payload["tool_choice"] = "auto";
 
         // Define the Tools
         payload["tools"] = {{
@@ -50,11 +61,28 @@ namespace OllamaClient
                 m["content"] = "";
             }
 
+            // OpenAI expects tool call function arguments as JSON strings.
+            if (m.contains("tool_calls") && m["tool_calls"].is_array()) {
+                for (auto &tc : m["tool_calls"]) {
+                    if (tc.contains("function") && tc["function"].contains("arguments")) {
+                        auto &args = tc["function"]["arguments"];
+                        if (!args.is_string()) {
+                            args = args.dump();
+                        }
+                    }
+                }
+            }
+
             payload["messages"].push_back(m);
         }
 
         std::string data = payload.dump();
-        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:11434/api/chat");
+        std::string auth_header = std::string("Authorization: Bearer ") + api_key;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        headers = curl_slist_append(headers, auth_header.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_URL, "https://api.openai.com/v1/chat/completions");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
@@ -65,18 +93,43 @@ namespace OllamaClient
         if (status != CURLE_OK)
         {
             err = curl_easy_strerror(status);
+            curl_slist_free_all(headers);
             curl_easy_cleanup(curl);
             return false;
         }
 
-        json res_json = json::parse(response);
-        json reply = res_json.value("message", json::object());
+        json res_json = json::parse(response, nullptr, false);
+        if (res_json.is_discarded())
+        {
+            err = "OpenAI returned invalid JSON";
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
+        if (res_json.contains("error"))
+        {
+            err = res_json["error"].value("message", "OpenAI API error");
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
+        if (!res_json.contains("choices") || !res_json["choices"].is_array() || res_json["choices"].empty())
+        {
+            err = "OpenAI response missing choices";
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
+        json reply = res_json["choices"][0].value("message", json::object());
 
         if (!reply.contains("content") || reply["content"].is_null()) {
             reply["content"] = "";
         }
 
-        // Parse tool calls if Ollama accidentally sent them as strings
+        // Convert OpenAI tool call arguments into JSON objects for local handling.
         if (reply.contains("tool_calls") && reply["tool_calls"].is_array())
         {
             for (auto &tc : reply["tool_calls"])
@@ -86,13 +139,17 @@ namespace OllamaClient
                     auto &raw_args = tc["function"]["arguments"];
                     if (raw_args.is_string())
                     {
-                        tc["function"]["arguments"] = json::parse(raw_args.get<std::string>());
+                        json parsed_args = json::parse(raw_args.get<std::string>(), nullptr, false);
+                        if (!parsed_args.is_discarded()) {
+                            tc["function"]["arguments"] = parsed_args;
+                        }
                     }
                 }
             }
         }
         
         history.push_back(reply.get<Message>());
+        curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
         return true;
     }
