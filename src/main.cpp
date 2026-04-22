@@ -1,7 +1,25 @@
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include "OpenAIClient.hpp"
 #include "SystemTools.hpp"
 #include "MediaTools.hpp"
+
+namespace {
+json parseToolArguments(const json& raw_args) {
+    if (raw_args.is_object()) {
+        return raw_args;
+    }
+
+    if (raw_args.is_string()) {
+        json parsed = json::parse(raw_args.get<std::string>(), nullptr, false);
+        if (parsed.is_object()) {
+            return parsed;
+        }
+    }
+
+    return json::object();
+}
+}
 
 int main() {
     std::vector<Message> history;
@@ -58,13 +76,21 @@ int main() {
 
             for (const auto& tc : response.tool_calls) {
                 const std::string call_id = tc.value("id", "");
-                const auto& func = tc["function"];
+                const auto& func = tc.contains("function") ? tc["function"] : json::object();
                 const std::string tool_name = func.value("name", "");
-                const auto& args = func["arguments"];
+                const json args = parseToolArguments(func.contains("arguments") ? func["arguments"] : json::object());
 
                 if (tool_name == "run_shell") {
                     const std::string command = args.value("command", "");
                     const bool pipe_output = args.value("pipe_output", true);
+
+                    if (command.empty()) {
+                        Message tool_result{"tool", "Tool call is missing a valid command argument."};
+                        tool_result.tool_call_id = call_id;
+                        tool_result.name = tool_name;
+                        history.push_back(tool_result);
+                        continue;
+                    }
 
                     std::cout << "[System] Executing: " << command << "\n";
                     auto res = SystemTools::execute(command, pipe_output);
