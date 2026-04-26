@@ -1,25 +1,34 @@
 # Cake-Agent
 
-Cake-Agent is a local-first AI assistant built in C++. It uses **Native Tool Calling** to interact with your Linux system through the Ollama API.
+Cake-Agent is an AI assistant built in C++. It uses **Native Tool Calling** to interact with your Linux system through the Ollama API locally, or through the OpenAI API via an API token.
 
 ## Current Status
 
 - [x] Use tool calling to execute commands
-- [ ] Support for loading other models
-- [ ] Support for multimodal history and attachments (images and audio)
+- [x] Support for loading other models
+- [x] Support for multimodal history and attachments (only images for now)
+- [ ] More tools to further allow the agent to operate
+- [ ] Proper history management
+- [ ] Proper GUI
+- [ ] Audio input via speech-to-text
+- [ ] Audio output via text-to-speech
 - [ ] Support for Windows
-- [ ] Maybe much more?
+- [ ] More?
 
-## Required Dependencies
+## Dependencies
 
+### Required Dependencies
 - **CMake** for the build system
-- **Ollama** for the local LLM API
-- For now, specifically the **Gemma4 E2B** model
 - **libcurl** for networking/API requests
 - **nlohmann_json** for JSON parsing
 
-### Install Dependencies (Linux)
+### Optional Dependencies
+- **Ollama** for the local LLM API
+- A local model for using **Ollama**
 
+## Install Dependencies (Linux)
+
+### Install Required Dependencies
 Install **CMake** and required libraries:
 ```bash
 # Arch
@@ -32,20 +41,21 @@ sudo apt install cmake libcurl4-openssl-dev nlohmann-json3-dev
 sudo dnf install cmake libcurl-devel nlohmann-json-devel
 ```
 
+### Install Optional Dependencies
 Install **Ollama**:
 (You can use your package manager if you prefer)
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
-Download the model:
+Download a model:
 ```bash
-ollama pull gemma4:e2b
+ollama pull <model-name>
 ```
 
-## Build
+## Build & Run
 
-Make sure you have the required dependencies installed.
+Make sure that you have the required dependencies installed.
 
 Clone the project using:
 ```bash
@@ -59,11 +69,47 @@ cmake -S . -B build
 cmake --build build -j
 ```
 
-## Run
-
-In Linux, simply execute the binary under "/build":
+To run the agent in Linux, simply execute the binary in the build folder:
 ```bash
 ./build/cake-agent
 ```
 
-Keep in mind that the first reply may be delayed by ~30-60 seconds because of the model loading.
+## Usage
+
+### Local Usage
+To use the agent with a local model, you must have **Ollama** installed with a pulled model.
+
+Start the agent:
+```bash
+./build/cake-agent
+```
+
+Then select one of the accepted models:
+```text
+/model
+/model ollama:<model-name>
+```
+
+Example:
+```text
+/model ollama:gemma4:e2b
+```
+
+### OpenAI Usage
+Set your OpenAI API key before running the app:
+```bash
+export OPENAI_API_KEY="your_api_key_here"
+```
+
+Then run the agent and select an OpenAI model:
+```text
+/model openai:gpt-4o-mini
+```
+
+### Runtime Commands
+- `/model` shows the current model and accepted model names.
+- `/model <model_name>` switches to a supported model.
+- `/image <path>` attaches an image to the next user message.
+- `/exit` or `/quit` exits the program.
+
+Keep in mind that the first replies on local LLMs may be delayed by ~30-60 seconds because of the model loading.
