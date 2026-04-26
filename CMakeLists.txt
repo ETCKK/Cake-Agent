@@ -11,10 +11,13 @@ include_directories(include)
 
 add_executable(cake-agent 
     src/main.cpp 
-    src/MediaTools.cpp 
-    src/SystemTools.cpp 
-    src/OllamaClient.cpp
-    src/OpenAIClient.cpp
+    src/core/InputManager.cpp
+    src/core/HistoryManager.cpp
+    src/core/AssistantManager.cpp
+    src/util/MediaUtils.cpp
+    src/util/SystemUtils.cpp
+    src/client/OllamaClient.cpp
+    src/client/OpenAIClient.cpp
 )
 
 target_link_libraries(cake-agent PRIVATE CURL::libcurl nlohmann_json::nlohmann_json)
