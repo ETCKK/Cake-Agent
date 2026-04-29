@@ -86,24 +86,25 @@ Start the agent:
 
 Then select one of the accepted models:
 ```text
-/model
-/model ollama:<model-name>
-```
-
-Example:
-```text
-/model ollama:gemma4:e2b
+/model                      // List accepted models
+/model ollama:<model-name>  // Set the current model
 ```
 
 ### OpenAI Usage
-Set your OpenAI API key before running the app:
+Create a `.env` file in the project root with your OpenAI API key:
 ```bash
-export OPENAI_API_KEY="your_api_key_here"
+OPENAI_API_KEY=your_api_key_here
 ```
 
-Then run the agent and select an OpenAI model:
+Start the agent:
+```bash
+./build/cake-agent
+```
+
+Then select one of the accepted models:
 ```text
-/model openai:gpt-4o-mini
+/model                      // List accepted models
+/model openai:<model-name>  // Set the current model
 ```
 
 ### Runtime Commands
