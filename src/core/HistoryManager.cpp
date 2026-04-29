@@ -15,7 +15,7 @@ Message buildUserMessage(const std::string& text) {
 void clearAttachedImages() {
     attached_images.clear();
 }
-} // namespace
+}
 
 namespace HistoryManager {
 
@@ -50,4 +50,4 @@ const std::vector<Message>& getHistory() {
     return history;
 }
 
-} // namespace HistoryManager
+}

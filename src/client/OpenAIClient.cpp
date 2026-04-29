@@ -144,7 +144,7 @@ bool parseResponse(const std::string& response, Message& reply, std::string& err
     reply = openAIToMessage(message);
     return true;
 }
-} // namespace
+}
 
 namespace OpenAIClient {
 
@@ -197,4 +197,4 @@ bool chat(const std::string& model, const std::vector<Message>& history, Message
     return ok;
 }
 
-} // namespace OpenAIClient
+}

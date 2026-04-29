@@ -14,6 +14,7 @@ add_executable(cake-agent
     src/core/InputManager.cpp
     src/core/HistoryManager.cpp
     src/core/AssistantManager.cpp
+    src/core/ToolManager.cpp
     src/util/MediaUtils.cpp
     src/util/SystemUtils.cpp
     src/client/OllamaClient.cpp

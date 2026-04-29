@@ -2,15 +2,12 @@
 #include "client/OllamaClient.hpp"
 #include "client/OpenAIClient.hpp"
 #include "core/HistoryManager.hpp"
+#include "core/ToolManager.hpp"
 #include "core/Types.hpp"
-#include "util/SystemUtils.hpp"
-
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <algorithm>
 
 namespace {
-using json = nlohmann::json;
 
 std::string current_model = "None";
 const std::vector<std::string> VALID_MODELS = {
@@ -18,19 +15,6 @@ const std::vector<std::string> VALID_MODELS = {
     "ollama:gemma4:e2b",
     "ollama:gemma4:e4b"
 };
-
-json parseFunctionArguments(const std::string& raw_args) {
-    if (raw_args.empty()) {
-        return json::object();
-    }
-
-    json parsed = json::parse(raw_args, nullptr, false);
-    if (parsed.is_object()) {
-        return parsed;
-    }
-
-    return json::object();
-}
 
 bool chat(const std::string& model, Message& reply, std::string& err) {
     const std::string openai_prefix = "openai:";
@@ -49,34 +33,6 @@ bool chat(const std::string& model, Message& reply, std::string& err) {
     return false;
 }
 
-void executeToolCalls(const std::vector<ToolCall>& tool_calls) {
-
-    for (const auto& tc : tool_calls) {
-        const std::string call_id = tc.id;
-        const std::string tool_name = tc.name;
-
-        if (tool_name != "run_shell") {
-            continue;
-        }
-
-        const json args = parseFunctionArguments(tc.arguments);
-        const std::string command = args.value("command", "");
-        const bool pipe_output = args.value("pipe_output", true);
-
-        if (command.empty()) {
-            ExecResult invalid_result;
-            invalid_result.exit_code = 2;
-            invalid_result.output = "Tool call is missing a valid command argument.";
-            HistoryManager::addToolResult(call_id, tool_name, invalid_result);
-            continue;
-        }
-
-        std::cout << "[System] Executing: " << command << "\n";
-        const ExecResult result = SystemUtils::execute(command, pipe_output);
-        HistoryManager::addToolResult(call_id, tool_name, result);
-    }
-}
-
 void chainAssistant(const std::string& model) {
     while (true) {
         Message reply;
@@ -90,10 +46,10 @@ void chainAssistant(const std::string& model) {
             return;
         }
 
-        executeToolCalls(reply.tool_calls);
+        ToolManager::executeToolCalls(reply.tool_calls);
     }
 }
-} // namespace
+}
 
 namespace AssistantManager {
 

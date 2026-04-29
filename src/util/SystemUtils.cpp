@@ -36,4 +36,4 @@ ExecResult execute(const std::string& command, const bool pipe_output) {
     return result;
 }
 
-} // namespace SystemUtils
+}

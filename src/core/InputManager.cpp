@@ -75,4 +75,4 @@ bool input(const std::string& raw_input) {
     return true;
 }
 
-} // namespace InputManager
+}

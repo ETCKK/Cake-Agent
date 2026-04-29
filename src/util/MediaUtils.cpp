@@ -50,4 +50,4 @@ std::string encodeBase64(const std::vector<unsigned char>& data) {
     return out;
 }
 
-} // namespace MediaUtils
+}

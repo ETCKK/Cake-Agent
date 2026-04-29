@@ -131,7 +131,7 @@ bool parseResponse(const std::string& response, Message& reply, std::string& err
     reply = ollamaToMessage(message);
     return true;
 }
-} // namespace
+}
 
 namespace OllamaClient {
 
@@ -169,4 +169,4 @@ bool chat(const std::string& model, const std::vector<Message>& history, Message
     return ok;
 }
 
-} // namespace OllamaClient
+}
