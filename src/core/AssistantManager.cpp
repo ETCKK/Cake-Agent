@@ -4,6 +4,7 @@
 #include "core/HistoryManager.hpp"
 #include "core/ToolManager.hpp"
 #include "core/Types.hpp"
+#include "util/TerminalUtils.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -37,7 +38,14 @@ void chainAssistant(const std::string& model) {
     while (true) {
         Message reply;
         std::string err;
-        if (!chat(model, reply, err)) {
+
+        TerminalUtils::startSpinner("Thinking...");
+
+        bool success = chat(model, reply, err);
+
+        TerminalUtils::stopSpinner();
+
+        if (!success) {
             std::cerr << "Chat error: " << err << "\n";
             return;
         }
