@@ -107,6 +107,23 @@ Then select one of the accepted models:
 /model openai:<model-name>  // Set the current model
 ```
 
+### Nvidia Usage
+Create a `.env` file in the project root with your NVIDIA API key:
+```bash
+NVIDIA_API_KEY=your_api_key_here
+```
+
+Start the agent:
+```bash
+./build/cake-agent
+```
+
+Then select one of the accepted models:
+```text
+/model                      // List accepted models
+/model nvidia:<model-name>  // Set the current model
+```
+
 ### Runtime Commands
 - `/model` shows the current model and accepted model names.
 - `/model <model_name>` switches to a supported model.

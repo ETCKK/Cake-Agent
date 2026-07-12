@@ -1,6 +1,7 @@
 #include "core/AssistantManager.hpp"
 #include "client/OllamaClient.hpp"
 #include "client/OpenAIClient.hpp"
+#include "client/NvidiaClient.hpp"
 #include "core/HistoryManager.hpp"
 #include "core/ToolManager.hpp"
 #include "core/Types.hpp"
@@ -15,12 +16,15 @@ namespace
     const std::vector<std::string> VALID_MODELS = {
         "openai:gpt-4o-mini",
         "ollama:gemma4:e2b",
-        "ollama:gemma4:e4b"};
+        "ollama:gemma4:e4b",
+        "nvidia:nvidia/nemotron-3-ultra-550b-a55b"
+    };
 
     bool chat(const std::string &model, Message &reply, std::string &err)
     {
         const std::string openai_prefix = "openai:";
         const std::string ollama_prefix = "ollama:";
+        const std::string nvidia_prefix = "nvidia:";
 
         if (model.rfind(openai_prefix, 0) == 0)
         {
@@ -32,6 +36,12 @@ namespace
         {
             const std::string ollama_model = model.substr(ollama_prefix.size());
             return OllamaClient::chat(ollama_model, HistoryManager::getHistory(), reply, err);
+        }
+
+        if (model.rfind(nvidia_prefix, 0) == 0)
+        {
+            const std::string nvidia_model = model.substr(nvidia_prefix.size());
+            return NvidiaClient::chat(nvidia_model, HistoryManager::getHistory(), reply, err);
         }
 
         return false;

@@ -19,6 +19,7 @@ add_executable(cake-agent
     src/util/SystemUtils.cpp
     src/client/OllamaClient.cpp
     src/client/OpenAIClient.cpp
+    src/client/NvidiaClient.cpp
 )
 
 target_link_libraries(cake-agent PRIVATE CURL::libcurl nlohmann_json::nlohmann_json)
