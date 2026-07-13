@@ -17,7 +17,8 @@ namespace
         "openai:gpt-4o-mini",
         "ollama:gemma4:e2b",
         "ollama:gemma4:e4b",
-        "nvidia:nvidia/nemotron-3-ultra-550b-a55b"
+        "nvidia:nvidia/nemotron-3-ultra-550b-a55b",
+        "nvidia:nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
     };
 
     bool chat(const std::string &model, Message &reply, std::string &err)
